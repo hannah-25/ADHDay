@@ -81,82 +81,42 @@ export default function ConsultationPrep() {
         </CardContent>
       </Card>
 
-      {/* 월간 요약 리포트 */}
+      {/* 월간 종합 분석 */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5" />
-            월간 요약 리포트
+            월간 종합 분석
           </CardTitle>
           <CardDescription>{monthlyReport.period} 복용 패턴과 효과를 종합 분석한 리포트입니다</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* 복용률 및 효과 */}
+        <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium mb-3">복용 현황</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">전체 복용률</span>
-                  <Badge variant="outline">{monthlyReport.medicationCompliance}%</Badge>
+              <h4 className="font-medium mb-3">이번 달 성과</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm">목표 달성률</span>
+                  <Badge>{monthlyReport.medicationCompliance}%</Badge>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between">
+                  <span className="text-sm">일지 작성률</span>
+                  <Badge>92%</Badge>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-sm">평균 약물 효과</span>
-                  <Badge variant="outline">{monthlyReport.averageEffectiveness}/10</Badge>
+                  <Badge>{monthlyReport.averageEffectiveness}/10</Badge>
                 </div>
               </div>
             </div>
-
             <div>
-              <h4 className="font-medium mb-3">주요 부작용</h4>
-              <div className="space-y-2">
-                {monthlyReport.majorSideEffects.map((effect, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-orange-500" />
-                    <span className="text-sm">{effect}</span>
-                  </div>
-                ))}
+              <h4 className="font-medium mb-3">다음 달 목표</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p>• 부작용 모니터링 강화</p>
+                <p>• 수면 패턴 개선</p>
+                <p>• 정기 상담 일정 준수</p>
               </div>
             </div>
-          </div>
-
-          {/* 개선사항 및 우려사항 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium mb-3 text-green-700">개선된 점</h4>
-              <div className="space-y-2">
-                {monthlyReport.improvements.map((improvement, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span className="text-sm">{improvement}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-medium mb-3 text-orange-700">우려사항</h4>
-              <div className="space-y-2">
-                {monthlyReport.concerns.map((concern, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full" />
-                    <span className="text-sm">{concern}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 리포트 다운로드 */}
-          <div className="flex gap-3">
-            <Button className="flex-1">
-              <Download className="w-4 h-4 mr-2" />
-              PDF 다운로드
-            </Button>
-            <Button variant="outline" className="flex-1">
-              <FileText className="w-4 h-4 mr-2" />
-              요약본 보기
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -182,7 +142,7 @@ export default function ConsultationPrep() {
             <Label htmlFor="goals">다음 달 치료 목표</Label>
             <Textarea
               id="goals"
-              placeholder="예: 주말 복용률을 높이고 싶습니다. 업무 집중력을 더 향상시키고 싶습니다."
+              placeholder="예: 업무 집중력을 더 향상시키고 싶습니다."
               className="min-h-[80px]"
               value={goals}
               onChange={e => setGoals(e.target.value)}

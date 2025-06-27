@@ -3,8 +3,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, TrendingUp, Pill, Heart } from "lucide-react"
+import { Calendar, TrendingUp, Pill, Heart, AlertCircle, Download, FileText } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
+import { Button } from "@/components/ui/button"
 
 const weeklyData = [
   { day: "월", medication: 100, mood: 7, effectiveness: 8 },
@@ -48,6 +49,34 @@ export default function Statistics() {
         </TabsList>
 
         <TabsContent value="weekly" className="space-y-6">
+
+          {/* 주간 패턴 분석 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>주간 패턴 분석</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">긍정적 패턴</h4>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• 복용 후 1시간 이후부터 효과를 보임</li>
+                    <li>• 목요일에 가장 좋은 컨디션을 보임</li>
+                  </ul>
+                </div>
+                <div className="p-4 bg-orange-50 rounded-lg">
+                  <h4 className="font-medium text-orange-900 mb-2">개선 필요</h4>
+                  <ul className="text-sm text-orange-700 space-y-1">
+                    <li>• pms 기간에 adhd 증상 조절 안됨</li>
+                    <li>• 수요일 컨디션 난조 원인 파악 필요</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+
+
           {/* 주간 요약 카드 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
@@ -99,6 +128,7 @@ export default function Statistics() {
             </Card>
           </div>
 
+          
           {/* 주간 트렌드 차트 */}
           <Card>
             <CardHeader>
@@ -120,33 +150,100 @@ export default function Statistics() {
             </CardContent>
           </Card>
 
-          {/* 주간 패턴 분석 */}
+          
+        </TabsContent>
+
+        <TabsContent value="monthly" className="space-y-6">
+
+          {/* 월간 종합 분석 */}
           <Card>
             <CardHeader>
-              <CardTitle>주간 패턴 분석</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                월간 요약 리포트
+              </CardTitle>
+              <CardDescription>2024년 12월 복용 패턴과 효과를 종합 분석한 리포트입니다</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">긍정적 패턴</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li>• 평일 복용률이 높을 때 약물 효과도 함께 상승</li>
-                    <li>• 목요일에 가장 좋은 컨디션을 보임</li>
-                  </ul>
+              <div className="space-y-6">
+                {/* 복용률 및 효과 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium mb-3">복용 현황</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">전체 복용률</span>
+                        <Badge variant="outline">87%</Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">평균 약물 효과</span>
+                        <Badge variant="outline">7.3/10</Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-3">주요 부작용</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-orange-500" />
+                        <span className="text-sm">가벼운 두통 (주 2-3회)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-orange-500" />
+                        <span className="text-sm">식욕 감소</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="p-4 bg-orange-50 rounded-lg">
-                  <h4 className="font-medium text-orange-900 mb-2">개선 필요</h4>
-                  <ul className="text-sm text-orange-700 space-y-1">
-                    <li>• 주말 복용률 저하로 인한 효과 감소</li>
-                    <li>• 수요일 컨디션 난조 원인 파악 필요</li>
-                  </ul>
+
+                {/* 개선사항 및 우려사항 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium mb-3 text-green-700">개선된 점</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                        <span className="text-sm">업무 집중력 향상</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                        <span className="text-sm">실수 빈도 감소</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-3 text-orange-700">우려사항</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                        <span className="text-sm">주말 복용률 저하</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                        <span className="text-sm">오후 3시경 약효 감소 느낌</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 리포트 다운로드 */}
+                <div className="flex gap-3">
+                  <Button className="flex-1">
+                    <Download className="w-4 h-4 mr-2" />
+                    PDF 다운로드
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    <FileText className="w-4 h-4 mr-2" />
+                    요약본 보기
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="monthly" className="space-y-6">
+
           {/* 월간 감정 분포 */}
           <Card>
             <CardHeader>
@@ -213,42 +310,7 @@ export default function Statistics() {
             </CardContent>
           </Card>
 
-          {/* 월간 종합 분석 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>월간 종합 분석</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium mb-3">이번 달 성과</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">전체 복용률</span>
-                      <Badge>87%</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">일지 작성률</span>
-                      <Badge>92%</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">평균 약물 효과</span>
-                      <Badge>7.3/10</Badge>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-3">다음 달 목표</h4>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <p>• 주말 복용률 90% 이상 유지</p>
-                    <p>• 부작용 모니터링 강화</p>
-                    <p>• 수면 패턴 개선</p>
-                    <p>• 정기 상담 일정 준수</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          
         </TabsContent>
       </Tabs>
     </div>
