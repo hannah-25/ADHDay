@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,24 +12,99 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Brain, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import SocialLoginButtons from "@/components/auth/social-login-buttons"
+import { login, register } from "@/lib/api"
 
 export default function LoginPage() {
+  // 폼 상태 관리
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false) // 비밀번호 표시/숨김 토글
+  const [isLoading, setIsLoading] = useState(false) // 로딩 상태
+  const router = useRouter() // 페이지 이동을 위한 router
 
+  // 이메일 로그인 처리 함수
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // 여기에 이메일 로그인 로직 구현
-    console.log("Email login:", { email, password })
+    try {
+      const response = await login(email, password)
+      console.log('로그인 성공:', response.data)
+      console.log('응답 전체 구조:', response)
+      
+      if (response.data.token) {
+        // 기존 사용자 정보 삭제
+        localStorage.removeItem('userInfo')
+        localStorage.setItem('authToken', response.data.token)
+        console.log('토큰 저장됨:', response.data.token)
+      }
+      
+      // JWT 토큰에서 사용자 정보 추출
+      const decodeJWT = (token: string) => {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          return JSON.parse(jsonPayload);
+        } catch (error) {
+          console.error('JWT 디코드 실패:', error);
+          return null;
+        }
+      };
 
-    // 임시 로딩
-    setTimeout(() => {
+      // 사용자 정보 저장 - JWT에서 추출
+      let userInfo = null
+      if (response.data.user) {
+        userInfo = response.data.user
+      } else if (response.data.data && response.data.data.user) {
+        userInfo = response.data.data.user
+      } else if (response.data) {
+        // 응답 자체가 사용자 정보인 경우
+        userInfo = response.data
+      }
+      
+      // JWT에서 사용자 정보 추출 시도
+      if (response.data.token) {
+        const decoded = decodeJWT(response.data.token)
+        console.log('JWT 디코드 결과:', decoded)
+        if (decoded) {
+          userInfo = {
+            id: decoded.id,
+            email: decoded.sub || decoded.email,
+            name: decoded.name || (decoded.sub ? decoded.sub.split('@')[0] : '사용자')
+          }
+          console.log('JWT에서 추출한 사용자 정보:', userInfo)
+        }
+      }
+      
+      if (userInfo) {
+        const userData = {
+          name: userInfo.name || (userInfo.email ? userInfo.email.split('@')[0] : '사용자'),
+          email: userInfo.email || '',
+          avatar: userInfo.avatar || "/placeholder-user.jpg"
+        }
+        localStorage.setItem('userInfo', JSON.stringify(userData))
+        console.log('사용자 정보 저장됨:', userData)
+      } else {
+        console.log('사용자 정보를 찾을 수 없음. 응답 구조:', response.data)
+      }
+      
+      alert('로그인에 성공했습니다!')
+      router.push('/')
+    } catch (error: any) {
+      console.error('로그인 실패:', error)
+      const errorMessage = error.response?.data?.error || '로그인에 실패했습니다.'
+      alert(errorMessage)
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
+  }
+
+  // 회원가입 페이지로 이동하는 함수
+  const handleSignupRedirect = () => {
+    router.push('/auth/signup')
   }
 
   return (

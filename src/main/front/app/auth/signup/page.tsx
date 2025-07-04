@@ -4,46 +4,36 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Brain, Mail, Lock, Eye, EyeOff, User } from "lucide-react"
+import { Brain, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import SocialLoginButtons from "@/components/auth/social-login-buttons"
+import { register } from "@/lib/api"
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
     confirmPassword: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [agreements, setAgreements] = useState({
-    terms: false,
-    privacy: false,
-    marketing: false,
-  })
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
+    const { name, value } = e.target
+    setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value
     }))
   }
 
-  const handleAgreementChange = (key: keyof typeof agreements, checked: boolean) => {
-    setAgreements((prev) => ({
-      ...prev,
-      [key]: checked,
-    }))
-  }
-
-  const handleEmailSignup = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (formData.password !== formData.confirmPassword) {
@@ -51,34 +41,46 @@ export default function SignupPage() {
       return
     }
 
-    if (!agreements.terms || !agreements.privacy) {
-      alert("필수 약관에 동의해주세요.")
+    if (formData.password.length < 6) {
+      alert("비밀번호는 최소 6자 이상이어야 합니다.")
       return
     }
 
     setIsLoading(true)
 
-    // 여기에 이메일 회원가입 로직 구현
-    console.log("Email signup:", { formData, agreements })
-
-    // 임시 로딩
-    setTimeout(() => {
+    try {
+      const response = await register(formData.email, formData.password)
+      console.log('회원가입 성공:', response.data)
+      
+      alert('회원가입에 성공했습니다! 로그인 페이지로 이동합니다.')
+      router.push('/auth/login')
+    } catch (error: any) {
+      console.error('회원가입 실패:', error)
+      console.error('에러 상세 정보:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      })
+      
+      let errorMessage = '회원가입에 실패했습니다.'
+      if (error.response?.status === 403) {
+        errorMessage = '접근이 거부되었습니다. 서버 설정을 확인해주세요.'
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      }
+      
+      alert(errorMessage)
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
-
-  const isFormValid =
-    formData.name &&
-    formData.email &&
-    formData.password &&
-    formData.confirmPassword &&
-    agreements.terms &&
-    agreements.privacy
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* 로고 및 헤더 */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Brain className="w-8 h-8 text-blue-600" />
@@ -90,28 +92,10 @@ export default function SignupPage() {
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">회원가입</CardTitle>
-            <CardDescription className="text-center">새 계정을 만들어 ADHD 관리를 시작하세요</CardDescription>
+            <CardDescription className="text-center">새로운 계정을 만들어 일지를 관리하세요</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* 이메일 회원가입 폼 */}
-            <form onSubmit={handleEmailSignup} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">이름</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="이름을 입력하세요"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
+            <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">이메일</Label>
                 <div className="relative">
@@ -137,7 +121,7 @@ export default function SignupPage() {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="비밀번호를 입력하세요"
+                    placeholder="비밀번호를 입력하세요 (최소 6자)"
                     value={formData.password}
                     onChange={handleInputChange}
                     className="pl-10 pr-10"
@@ -177,51 +161,7 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              {/* 약관 동의 */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="terms"
-                    checked={agreements.terms}
-                    onCheckedChange={(checked) => handleAgreementChange("terms", checked as boolean)}
-                  />
-                  <Label htmlFor="terms" className="text-sm">
-                    <span className="text-red-500">*</span>
-                    <Link href="/terms" className="text-blue-600 hover:underline ml-1">
-                      이용약관
-                    </Link>
-                    에 동의합니다
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="privacy"
-                    checked={agreements.privacy}
-                    onCheckedChange={(checked) => handleAgreementChange("privacy", checked as boolean)}
-                  />
-                  <Label htmlFor="privacy" className="text-sm">
-                    <span className="text-red-500">*</span>
-                    <Link href="/privacy" className="text-blue-600 hover:underline ml-1">
-                      개인정보처리방침
-                    </Link>
-                    에 동의합니다
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="marketing"
-                    checked={agreements.marketing}
-                    onCheckedChange={(checked) => handleAgreementChange("marketing", checked as boolean)}
-                  />
-                  <Label htmlFor="marketing" className="text-sm">
-                    마케팅 정보 수신에 동의합니다 (선택)
-                  </Label>
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading || !isFormValid}>
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "회원가입 중..." : "회원가입"}
               </Button>
             </form>
@@ -235,7 +175,6 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* 소셜 회원가입 버튼들 */}
             <SocialLoginButtons type="signup" />
 
             <div className="text-center text-sm">
@@ -246,6 +185,18 @@ export default function SignupPage() {
             </div>
           </CardContent>
         </Card>
+
+        <div className="text-center mt-6 text-xs text-gray-500">
+          회원가입하시면{" "}
+          <Link href="/terms" className="underline">
+            이용약관
+          </Link>{" "}
+          및{" "}
+          <Link href="/privacy" className="underline">
+            개인정보처리방침
+          </Link>
+          에 동의하는 것으로 간주됩니다.
+        </div>
       </div>
     </div>
   )

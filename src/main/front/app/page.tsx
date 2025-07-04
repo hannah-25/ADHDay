@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -13,16 +13,70 @@ import DailyLog from "@/components/daily-log"
 import MedicationManager from "@/components/medication-manager"
 import Statistics from "@/components/statistics"
 import ConsultationPrep from "@/components/consultation-prep"
+import { logout, getUserInfo } from "@/lib/api"
 
 export default function ADHDayApp() {
   const [activeTab, setActiveTab] = useState("dashboard")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userProfile, setUserProfile] = useState({
-    name: "해나",
-    email: "judyjjj106@gmail.com",
+    name: "",
+    email: "",
     avatar: "/placeholder-user.jpg"
   })
   const router = useRouter()
+
+  // 컴포넌트 마운트 시 로그인 상태 확인 및 사용자 정보 가져오기
+  useEffect(() => {
+    console.log('페이지 로드 - 로그인 상태 확인 중...')
+    const token = localStorage.getItem('authToken')
+    console.log('저장된 토큰:', token ? '있음' : '없음')
+    
+    if (token) {
+      setIsLoggedIn(true)
+      console.log('로그인 상태로 설정됨')
+      
+      // localStorage에서 사용자 정보 확인
+      const savedUserInfo = localStorage.getItem('userInfo')
+      console.log('저장된 사용자 정보:', savedUserInfo)
+      
+      if (savedUserInfo) {
+        try {
+          const userInfo = JSON.parse(savedUserInfo)
+          console.log('파싱된 사용자 정보:', userInfo)
+          setUserProfile(userInfo)
+        } catch (error) {
+          console.error('저장된 사용자 정보 파싱 실패:', error)
+        }
+      } else {
+        console.log('저장된 사용자 정보가 없음')
+      }
+      
+      // 서버에서 최신 사용자 정보 가져오기 (백그라운드에서)
+      fetchUserInfo()
+    } else {
+      console.log('토큰이 없어 로그아웃 상태로 설정됨')
+    }
+  }, [])
+
+  // 사용자 정보 가져오기 함수
+  const fetchUserInfo = async () => {
+    try {
+      const response = await getUserInfo()
+      if (response.data.user) {
+        setUserProfile({
+          name: response.data.user.name || response.data.user.email.split('@')[0], // 이름이 없으면 이메일 앞부분 사용
+          email: response.data.user.email,
+          avatar: response.data.user.avatar || "/placeholder-user.jpg"
+        })
+        console.log('서버에서 사용자 정보 업데이트됨:', response.data.user)
+      }
+    } catch (error) {
+      console.error('사용자 정보 가져오기 실패:', error)
+      // 에러가 발생해도 localStorage의 정보를 사용하므로 로그아웃하지 않음
+      // 대신 콘솔에 경고만 출력
+      console.warn('서버에서 사용자 정보를 가져올 수 없지만, 로컬 정보를 사용합니다.')
+    }
+  }
 
   const handleLogin = () => {
     router.push("/auth/login")
@@ -32,8 +86,23 @@ export default function ADHDayApp() {
     router.push("/auth/signup")
   }
 
-  const handleLogout = () => {
-    setIsLoggedIn(false)
+  const handleLogout = async () => {
+    try {
+      await logout()
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userInfo')
+      setIsLoggedIn(false)
+      setUserProfile({ name: "", email: "", avatar: "/placeholder-user.jpg" })
+      alert('로그아웃되었습니다.')
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+      // 로컬에서 토큰과 사용자 정보 제거하고 로그아웃 처리
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userInfo')
+      setIsLoggedIn(false)
+      setUserProfile({ name: "", email: "", avatar: "/placeholder-user.jpg" })
+      alert('로그아웃되었습니다.')
+    }
   }
 
   return (
@@ -54,17 +123,17 @@ export default function ADHDayApp() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2 p-2">
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
-                        <AvatarFallback>{userProfile.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={userProfile.avatar} alt={userProfile.name || userProfile.email} />
+                        <AvatarFallback>{(userProfile.name || userProfile.email || 'U').charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium">{userProfile.name}</span>
+                      <span className="text-sm font-medium">{userProfile.name || userProfile.email || '사용자'}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{userProfile.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{userProfile.email}</p>
+                        <p className="text-sm font-medium leading-none">{userProfile.name || userProfile.email || '사용자'}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{userProfile.email || '이메일 없음'}</p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
