@@ -52,8 +52,51 @@ export default function SignupPage() {
       const response = await register(formData.email, formData.password)
       console.log('회원가입 성공:', response.data)
       
-      alert('회원가입에 성공했습니다! 로그인 페이지로 이동합니다.')
-      router.push('/auth/login')
+      // 회원가입 성공 시 토큰 처리
+      if (response.data.accessToken) {
+        // 기존 사용자 정보 삭제
+        localStorage.removeItem('userInfo')
+        localStorage.setItem('authToken', response.data.accessToken)
+        
+        // 리프레시 토큰 저장
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken)
+        }
+        
+        // JWT에서 사용자 정보 추출
+        const decodeJWT = (token: string) => {
+          try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+          } catch (error) {
+            console.error('JWT 디코드 실패:', error);
+            return null;
+          }
+        };
+
+        const decoded = decodeJWT(response.data.accessToken)
+        console.log('회원가입 JWT 디코드 결과:', decoded)
+        
+        if (decoded) {
+          const userData = {
+            name: decoded.name || (decoded.sub ? decoded.sub.split('@')[0] : '사용자'),
+            email: decoded.sub || decoded.email || formData.email,
+            avatar: "/placeholder-user.jpg"
+          }
+          localStorage.setItem('userInfo', JSON.stringify(userData))
+          console.log('회원가입 사용자 정보 저장됨:', userData)
+        }
+        
+        alert('회원가입에 성공했습니다! 자동으로 로그인됩니다.')
+        router.push('/')
+      } else {
+        alert('회원가입에 성공했습니다! 로그인 페이지로 이동합니다.')
+        router.push('/auth/login')
+      }
     } catch (error: any) {
       console.error('회원가입 실패:', error)
       console.error('에러 상세 정보:', {

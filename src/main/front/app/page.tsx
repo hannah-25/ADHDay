@@ -90,6 +90,7 @@ export default function ADHDayApp() {
     try {
       await logout()
       localStorage.removeItem('authToken')
+      localStorage.removeItem('refreshToken')
       localStorage.removeItem('userInfo')
       setIsLoggedIn(false)
       setUserProfile({ name: "", email: "", avatar: "/placeholder-user.jpg" })
@@ -98,6 +99,7 @@ export default function ADHDayApp() {
       console.error('로그아웃 실패:', error)
       // 로컬에서 토큰과 사용자 정보 제거하고 로그아웃 처리
       localStorage.removeItem('authToken')
+      localStorage.removeItem('refreshToken')
       localStorage.removeItem('userInfo')
       setIsLoggedIn(false)
       setUserProfile({ name: "", email: "", avatar: "/placeholder-user.jpg" })

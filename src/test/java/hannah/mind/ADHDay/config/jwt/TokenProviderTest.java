@@ -1,7 +1,9 @@
 package hannah.mind.ADHDay.config.jwt;
 
-import hannah.mind.ADHDay.user.User;
-import hannah.mind.ADHDay.user.UserRepository;
+import hannah.mind.ADHDay.config.JwtProperties;
+import hannah.mind.ADHDay.auth.jwt.TokenProvider;
+import hannah.mind.ADHDay.domain.account.Account;
+import hannah.mind.ADHDay.domain.account.AccountRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +32,7 @@ public class TokenProviderTest {
     private JwtProperties jwtProperties;
 
     @Autowired
-    private UserRepository userRepository;
+    private AccountRepository accountRepository;
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtProperties.getSecretKey().getBytes());
@@ -40,7 +42,7 @@ public class TokenProviderTest {
     @Test
     void generateToken() {
         // given
-        User testUser = userRepository.save(User.builder()
+        Account testUser = accountRepository.save(Account.builder()
                 .email("user@gmail.com")
                 .password("1234")
                 .build());
@@ -83,7 +85,7 @@ public class TokenProviderTest {
 //                .build()
 //                .createToken(jwtProperties);
 
-        User testUser = userRepository.save(User.builder()
+        Account testUser = accountRepository.save(Account.builder()
                 .email(userEmail)
                 .password("1234")
                 .build());

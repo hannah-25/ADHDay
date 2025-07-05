@@ -1,13 +1,13 @@
 package hannah.mind.ADHDay.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hannah.mind.ADHDay.config.jwt.DTO.CreateAccessTokenRequest;
+import hannah.mind.ADHDay.auth.jwt.dto.CreateAccessTokenRequest;
 import hannah.mind.ADHDay.config.jwt.JwtFactory;
-import hannah.mind.ADHDay.config.jwt.JwtProperties;
-import hannah.mind.ADHDay.config.jwt.refreshToken.RefreshToken;
-import hannah.mind.ADHDay.config.jwt.refreshToken.RefreshTokenRepository;
-import hannah.mind.ADHDay.user.User;
-import hannah.mind.ADHDay.user.UserRepository;
+import hannah.mind.ADHDay.config.JwtProperties;
+import hannah.mind.ADHDay.auth.jwt.RefreshToken;
+import hannah.mind.ADHDay.auth.jwt.RefreshTokenRepository;
+import hannah.mind.ADHDay.domain.account.Account;
+import hannah.mind.ADHDay.domain.account.AccountRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ public class TokenApiControllerTest {
     @Autowired
     JwtProperties jwtProperties;
     @Autowired
-    UserRepository userRepository;
+    AccountRepository accountRepository;
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
 
@@ -49,7 +49,7 @@ public class TokenApiControllerTest {
     public void setMockMvc(){
         this.mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .build();
-        userRepository.deleteAll();
+        accountRepository.deleteAll();
     }
 
     @DisplayName("createNewAccessToken : 새로운 액세스 토큰을 발급한다")
@@ -59,20 +59,20 @@ public class TokenApiControllerTest {
         //given
         final String url = "/api/token";
 
-        User testUser = userRepository.save(User.builder()
+        Account account = accountRepository.save(Account.builder()
                 .email("user@email.com")
                 .password("test-password-longerlonger")
                 .build());
 
         String refreshToken = JwtFactory.builder()
-                .claims(Map.of("id", testUser.getId()))
+                .claims(Map.of("id", account.getId()))
                 .build()
                 .createToken(jwtProperties);
         
-        refreshTokenRepository.save(new RefreshToken(testUser.getId(), refreshToken));
+        refreshTokenRepository.save(new RefreshToken(account.getId(), refreshToken));
+        CreateAccessTokenRequest request = new CreateAccessTokenRequest(refreshToken);
 
-        CreateAccessTokenRequest request = new CreateAccessTokenRequest();
-        request.setRefreshToken(refreshToken);
+
         final String requestBody = objectMapper.writeValueAsString(request);
         
         //when

@@ -22,6 +22,14 @@ export const register = (email: string, password: string) => {
   return apiClient.post('/auth/signup', { email, password });
 };
 
+// 토큰 갱신 API
+export const refreshToken = () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  return apiClient.post('/auth/refresh', {
+    refreshToken: refreshToken
+  });
+};
+
 // 로그아웃 API
 export const logout = () => {
   const token = localStorage.getItem('authToken');
@@ -104,7 +112,7 @@ apiClient.interceptors.response.use(
     });
     return response;
   },
-  (error) => {
+  async (error) => {
     console.log('API 응답 에러:', {
       status: error.response?.status,
       statusText: error.response?.statusText,
@@ -115,6 +123,40 @@ apiClient.interceptors.response.use(
         data: error.config?.data
       }
     });
+
+    // 401 에러이고 토큰 갱신이 가능한 경우
+    if (error.response?.status === 401 && !error.config._retry) {
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (refreshToken) {
+        error.config._retry = true;
+        
+        try {
+          const response = await apiClient.post('/auth/refresh', {
+            refreshToken: refreshToken
+          });
+          
+          if (response.data.accessToken) {
+            localStorage.setItem('authToken', response.data.accessToken);
+            if (response.data.refreshToken) {
+              localStorage.setItem('refreshToken', response.data.refreshToken);
+            }
+            
+            // 원래 요청 재시도
+            error.config.headers['Authorization'] = `Bearer ${response.data.accessToken}`;
+            return apiClient(error.config);
+          }
+        } catch (refreshError) {
+          console.error('토큰 갱신 실패:', refreshError);
+          // 토큰 갱신 실패 시 로그아웃 처리
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userInfo');
+          window.location.href = '/auth/login';
+        }
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

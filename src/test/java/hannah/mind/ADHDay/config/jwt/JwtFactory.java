@@ -1,5 +1,6 @@
 package hannah.mind.ADHDay.config.jwt;
 
+import hannah.mind.ADHDay.config.JwtProperties;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
