@@ -1,6 +1,6 @@
 package hannah.mind.ADHDay.auth.security;
 
-import hannah.mind.ADHDay.auth.jwt.filter.TokenAuthenticationFilter;
+import hannah.mind.ADHDay.auth.jwt.filter.JwtHeaderAuthFilter;
 import hannah.mind.ADHDay.domain.account.AccountDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,8 +25,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final TokenAuthenticationFilter tokenAuthenticationFilter;
-    private final AccountDetailsService userDetailsService;
+    private final JwtHeaderAuthFilter jwtHeaderAuthFilter;
+    private final AccountDetailsService accountDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -41,13 +41,16 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/api/assessments/templates/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api/auth/login", "/api/auth/signup").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/auth/refresh").permitAll()
+                .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui-custom.html").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .anyRequest().authenticated()
             )
 
             // JWT 필터 추가
-            .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class)
             
             .headers(headers -> headers
                     .frameOptions(frame -> frame.sameOrigin())
@@ -79,7 +82,7 @@ public class SecurityConfig {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 
         // DB에서 User 찾고 UserDetails 반환
-        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setUserDetailsService(accountDetailsService);
 
         //입력한 비밀번호 vs DB 암호화 비밀번호 비교 (BCrypt)
         authProvider.setPasswordEncoder(bCryptPasswordEncoder);

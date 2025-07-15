@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Brain, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import SocialLoginButtons from "@/components/auth/social-login-buttons"
 import { login, register } from "@/lib/api"
+import Cookies from 'js-cookie'
 
 export default function LoginPage() {
   // 폼 상태 관리
@@ -35,9 +36,11 @@ export default function LoginPage() {
       if (response.data.token) {
         // 기존 사용자 정보 삭제
         localStorage.removeItem('userInfo')
-        localStorage.setItem('authToken', response.data.token)
+        Cookies.set('authToken', response.data.token)
         console.log('토큰 저장됨:', response.data.token)
       }
+      
+      if (response.data.refreshToken) { Cookies.set('refreshToken', response.data.refreshToken) }
       
       // JWT 토큰에서 사용자 정보 추출
       const decodeJWT = (token: string) => {

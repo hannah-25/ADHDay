@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -46,16 +46,73 @@ const predefinedMedications = [
 ]
 
 export default function MedicationManager() {
-  const [currentMedications, setCurrentMedications] = useState([
-    {
-      id: 1,
-      name: "콘서타",
-      dosage: "18mg",
-      times: ["08:00", "14:00"],
-      active: true,
-    },
-  ])
+  const [currentMedications, setCurrentMedications] = useState<Array<{
+    id: number,
+    name: string,
+    dosage: string,
+    times: string[],
+    active: boolean
+  }>>([])
   const [selectedMedInfo, setSelectedMedInfo] = useState(predefinedMedications[0])
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [newMedication, setNewMedication] = useState({
+    name: "",
+    dosage: "",
+    time1: "",
+    time2: ""
+  })
+
+  // localStorage에서 약물 목록 불러오기
+  useEffect(() => {
+    const savedMedications = localStorage.getItem('userMedications')
+    if (savedMedications) {
+      try {
+        const parsed = JSON.parse(savedMedications)
+        setCurrentMedications(parsed)
+      } catch (error) {
+        console.error('약물 목록 파싱 실패:', error)
+      }
+    }
+  }, [])
+
+  // 약물 목록을 localStorage에 저장
+  const saveMedications = (medications: typeof currentMedications) => {
+    localStorage.setItem('userMedications', JSON.stringify(medications))
+    // 대시보드에서 사용할 수 있도록 간단한 형태로도 저장
+    const simpleMedications = medications.map(med => ({
+      name: med.name,
+      dosage: med.dosage
+    }))
+    localStorage.setItem('userMedications', JSON.stringify(simpleMedications))
+  }
+
+  const handleAddMedication = () => {
+    if (!newMedication.name || !newMedication.dosage) return
+
+    const times = [newMedication.time1]
+    if (newMedication.time2) times.push(newMedication.time2)
+
+    const newMed = {
+      id: Date.now(),
+      name: newMedication.name,
+      dosage: newMedication.dosage,
+      times,
+      active: true
+    }
+
+    const updatedMedications = [...currentMedications, newMed]
+    setCurrentMedications(updatedMedications)
+    saveMedications(updatedMedications)
+    
+    setNewMedication({ name: "", dosage: "", time1: "", time2: "" })
+    setShowAddDialog(false)
+  }
+
+  const handleDeleteMedication = (id: number) => {
+    const updatedMedications = currentMedications.filter(med => med.id !== id)
+    setCurrentMedications(updatedMedications)
+    saveMedications(updatedMedications)
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -78,7 +135,18 @@ export default function MedicationManager() {
         <TabsContent value="current" className="space-y-4">
           {/* 현재 복용 약물 목록 */}
           <div className="space-y-4">
-            {currentMedications.map((med) => (
+            {currentMedications.length === 0 ? (
+              <Card key="no-med-placeholder">
+                <CardContent className="pt-6">
+                  <div className="text-center py-8">
+                    <Pill className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">복용 중인 약물이 없습니다</h3>
+                    <p className="text-gray-600 mb-4">아래 버튼을 눌러 복용할 약물을 추가해주세요</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              currentMedications.map((med) => (
               <Card key={med.id}>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
@@ -91,26 +159,31 @@ export default function MedicationManager() {
                         <p className="text-sm text-gray-600">{med.dosage}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <Clock className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-600">{med.times.join(", ")}</span>
+                          <span className="text-sm text-gray-600">{Array.isArray(med.times) && med.times.length > 0 ? med.times.join(", ") : "시간 정보 없음"}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={med.active ? "default" : "secondary"}>{med.active ? "복용 중" : "중단"}</Badge>
-                      <Button variant="outline" size="sm">
-                        수정
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteMedication(med.id)}
+                      >
+                        삭제
                       </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            ))
+            )}
           </div>
 
           {/* 새 약물 추가 */}
-          <Dialog>
+          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button className="w-full">
+              <Button className="w-full" onClick={() => setShowAddDialog(true)}>
                 <Plus className="w-4 h-4 mr-2" />새 약물 추가
               </Button>
             </DialogTrigger>
@@ -122,7 +195,7 @@ export default function MedicationManager() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="med-name">약물명</Label>
-                  <Select>
+                  <Select onValueChange={(value) => setNewMedication({...newMedication, name: value})}>
                     <SelectTrigger>
                       <SelectValue placeholder="약물을 선택하세요" />
                     </SelectTrigger>
@@ -137,53 +210,72 @@ export default function MedicationManager() {
                 </div>
                 <div>
                   <Label htmlFor="dosage">용량</Label>
-                  <Input id="dosage" placeholder="예: 18mg" />
+                  <Input 
+                    id="dosage" 
+                    placeholder="예: 18mg"
+                    value={newMedication.dosage}
+                    onChange={(e) => setNewMedication({...newMedication, dosage: e.target.value})}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="time1">복용 시간 1</Label>
-                  <Input id="time1" type="time" />
+                  <Input 
+                    id="time1" 
+                    type="time"
+                    value={newMedication.time1}
+                    onChange={(e) => setNewMedication({...newMedication, time1: e.target.value})}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="time2">복용 시간 2 (선택)</Label>
-                  <Input id="time2" type="time" />
+                  <Input 
+                    id="time2" 
+                    type="time"
+                    value={newMedication.time2}
+                    onChange={(e) => setNewMedication({...newMedication, time2: e.target.value})}
+                  />
                 </div>
-                <Button className="w-full">추가</Button>
+                <Button className="w-full" onClick={handleAddMedication}>
+                  추가
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
 
           {/* 오늘의 복용 현황 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">오늘의 복용 현황</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="font-medium">콘서타 18mg</p>
-                      <p className="text-sm text-gray-600">08:00 복용 완료</p>
+          {currentMedications.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">오늘의 복용 현황</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <div>
+                        <p className="font-medium">콘서타 18mg</p>
+                        <p className="text-sm text-gray-600">08:00 복용 완료</p>
+                      </div>
                     </div>
+                    <Badge variant="outline" className="bg-green-100 text-green-700">
+                      완료
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className="bg-green-100 text-green-700">
-                    완료
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-yellow-600" />
-                    <div>
-                      <p className="font-medium">콘서타 18mg</p>
-                      <p className="text-sm text-gray-600">14:00 복용 예정</p>
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5 text-yellow-600" />
+                      <div>
+                        <p className="font-medium">콘서타 18mg</p>
+                        <p className="text-sm text-gray-600">14:00 복용 예정</p>
+                      </div>
                     </div>
+                    <Button size="sm">복용 체크</Button>
                   </div>
-                  <Button size="sm">복용 체크</Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="info" className="space-y-4">
@@ -267,8 +359,7 @@ export default function MedicationManager() {
                   <div>
                     <p className="font-medium text-blue-900">주의사항</p>
                     <p className="text-sm text-blue-700 mt-1">
-                      약물 복용 전 반드시 의사와 상담하시고, 처방된 용량과 시간을 정확히 지켜주세요. 부작용이 발생하면
-                      즉시 의료진에게 연락하시기 바랍니다.
+                      처방된 용량과 시간을 정확히 지켜주세요. 부작용이 발생하면 즉시 의료진에게 연락하시기 바랍니다.
                     </p>
                   </div>
                 </div>

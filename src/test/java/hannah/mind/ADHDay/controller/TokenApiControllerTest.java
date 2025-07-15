@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hannah.mind.ADHDay.auth.jwt.dto.CreateAccessTokenRequest;
 import hannah.mind.ADHDay.config.jwt.JwtFactory;
 import hannah.mind.ADHDay.config.JwtProperties;
-import hannah.mind.ADHDay.auth.jwt.RefreshToken;
-import hannah.mind.ADHDay.auth.jwt.RefreshTokenRepository;
 import hannah.mind.ADHDay.domain.account.Account;
 import hannah.mind.ADHDay.domain.account.AccountRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,8 +40,6 @@ public class TokenApiControllerTest {
     JwtProperties jwtProperties;
     @Autowired
     AccountRepository accountRepository;
-    @Autowired
-    RefreshTokenRepository refreshTokenRepository;
 
     @BeforeEach
     public void setMockMvc(){
@@ -69,7 +65,6 @@ public class TokenApiControllerTest {
                 .build()
                 .createToken(jwtProperties);
         
-        refreshTokenRepository.save(new RefreshToken(account.getId(), refreshToken));
         CreateAccessTokenRequest request = new CreateAccessTokenRequest(refreshToken);
 
 

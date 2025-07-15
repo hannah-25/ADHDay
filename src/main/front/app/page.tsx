@@ -6,17 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Calendar, Clock, Pill, Brain, TrendingUp, FileText, User, LogOut, LogIn, UserPlus } from "lucide-react"
+import { Calendar, TrendingUp, FileText, User, LogOut, LogIn, UserPlus, Info } from "lucide-react"
 import Dashboard from "@/components/dashboard"
-import SelfAssessment from "@/components/self-assessment"
-import DailyLog from "@/components/daily-log"
-import MedicationManager from "@/components/medication-manager"
 import Statistics from "@/components/statistics"
-import ConsultationPrep from "@/components/consultation-prep"
 import { logout, getUserInfo } from "@/lib/api"
+import Cookies from 'js-cookie'
 
 export default function ADHDayApp() {
   const [activeTab, setActiveTab] = useState("dashboard")
+  const [statisticsTab, setStatisticsTab] = useState("weekly")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userProfile, setUserProfile] = useState({
     name: "",
@@ -27,56 +25,19 @@ export default function ADHDayApp() {
 
   // 컴포넌트 마운트 시 로그인 상태 확인 및 사용자 정보 가져오기
   useEffect(() => {
-    console.log('페이지 로드 - 로그인 상태 확인 중...')
-    const token = localStorage.getItem('authToken')
-    console.log('저장된 토큰:', token ? '있음' : '없음')
-    
-    if (token) {
-      setIsLoggedIn(true)
-      console.log('로그인 상태로 설정됨')
-      
-      // localStorage에서 사용자 정보 확인
-      const savedUserInfo = localStorage.getItem('userInfo')
-      console.log('저장된 사용자 정보:', savedUserInfo)
-      
-      if (savedUserInfo) {
-        try {
-          const userInfo = JSON.parse(savedUserInfo)
-          console.log('파싱된 사용자 정보:', userInfo)
-          setUserProfile(userInfo)
-        } catch (error) {
-          console.error('저장된 사용자 정보 파싱 실패:', error)
+    const init=async()=>{
+      try{
+        const res=await getUserInfo();
+        if(res.data.user){
+          setUserProfile({name:res.data.user.name,email:res.data.user.email,avatar:res.data.user.avatar||"/placeholder-user.jpg"});
+          setIsLoggedIn(true);
         }
-      } else {
-        console.log('저장된 사용자 정보가 없음')
+      }catch(e){
+        setIsLoggedIn(false);
       }
-      
-      // 서버에서 최신 사용자 정보 가져오기 (백그라운드에서)
-      fetchUserInfo()
-    } else {
-      console.log('토큰이 없어 로그아웃 상태로 설정됨')
-    }
-  }, [])
-
-  // 사용자 정보 가져오기 함수
-  const fetchUserInfo = async () => {
-    try {
-      const response = await getUserInfo()
-      if (response.data.user) {
-        setUserProfile({
-          name: response.data.user.name || response.data.user.email.split('@')[0], // 이름이 없으면 이메일 앞부분 사용
-          email: response.data.user.email,
-          avatar: response.data.user.avatar || "/placeholder-user.jpg"
-        })
-        console.log('서버에서 사용자 정보 업데이트됨:', response.data.user)
-      }
-    } catch (error) {
-      console.error('사용자 정보 가져오기 실패:', error)
-      // 에러가 발생해도 localStorage의 정보를 사용하므로 로그아웃하지 않음
-      // 대신 콘솔에 경고만 출력
-      console.warn('서버에서 사용자 정보를 가져올 수 없지만, 로컬 정보를 사용합니다.')
-    }
-  }
+    };
+    init();
+  },[]);
 
   const handleLogin = () => {
     router.push("/auth/login")
@@ -89,8 +50,8 @@ export default function ADHDayApp() {
   const handleLogout = async () => {
     try {
       await logout()
-      localStorage.removeItem('authToken')
-      localStorage.removeItem('refreshToken')
+      Cookies.remove('authToken')
+      Cookies.remove('refreshToken')
       localStorage.removeItem('userInfo')
       setIsLoggedIn(false)
       setUserProfile({ name: "", email: "", avatar: "/placeholder-user.jpg" })
@@ -98,8 +59,8 @@ export default function ADHDayApp() {
     } catch (error) {
       console.error('로그아웃 실패:', error)
       // 로컬에서 토큰과 사용자 정보 제거하고 로그아웃 처리
-      localStorage.removeItem('authToken')
-      localStorage.removeItem('refreshToken')
+      Cookies.remove('authToken')
+      Cookies.remove('refreshToken')
       localStorage.removeItem('userInfo')
       setIsLoggedIn(false)
       setUserProfile({ name: "", email: "", avatar: "/placeholder-user.jpg" })
@@ -179,55 +140,36 @@ export default function ADHDayApp() {
 
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               대시보드
             </TabsTrigger>
-            <TabsTrigger value="assessment" className="flex items-center gap-2">
-              <Brain className="w-4 h-4" />
-              자가진단
-            </TabsTrigger>
-            <TabsTrigger value="daily-log" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              일지작성
-            </TabsTrigger>
-            <TabsTrigger value="medication" className="flex items-center gap-2">
-              <Pill className="w-4 h-4" />
-              약물관리
-            </TabsTrigger>
-            <TabsTrigger value="statistics" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              통계
-            </TabsTrigger>
-            <TabsTrigger value="consultation" className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              상담준비
+            <TabsTrigger value="info" className="flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              ADHD를 araboza!
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
-            <Dashboard />
+            <Dashboard 
+              onReportClick={() => { setActiveTab('statistics'); setStatisticsTab('weekly'); }}
+              onConsultationClick={() => { setActiveTab('statistics'); setStatisticsTab('consultation'); }}
+            />
           </TabsContent>
 
-          <TabsContent value="assessment">
-            <SelfAssessment />
-          </TabsContent>
-
-          <TabsContent value="daily-log">
-            <DailyLog />
-          </TabsContent>
-
-          <TabsContent value="medication">
-            <MedicationManager />
+          <TabsContent value="info">
+            <div className="max-w-2xl mx-auto py-16">
+              <div className="bg-white rounded-xl shadow p-8 text-center">
+                <h2 className="text-2xl font-bold mb-4">ADHD를 araboza!</h2>
+                <p className="text-gray-700 mb-2">ADHD 질병 정보, 약 정보 등 다양한 자료가 곧 업로드될 예정입니다.</p>
+                <p className="text-gray-500">최신 의학 정보와 실생활 팁, 약물 정보, 자주 묻는 질문 등 유익한 콘텐츠를 준비 중입니다.<br/>조금만 기다려 주세요!</p>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="statistics">
-            <Statistics />
-          </TabsContent>
-
-          <TabsContent value="consultation">
-            <ConsultationPrep />
+            <Statistics selectedTab={statisticsTab} onTabChange={setStatisticsTab} />
           </TabsContent>
         </Tabs>
       </div>

@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, TrendingUp, Pill, Heart, AlertCircle, Download, FileText } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 import { Button } from "@/components/ui/button"
+import ConsultationPrep from "./consultation-prep"
 
 const weeklyData = [
   { day: "월", medication: 100, mood: 7, effectiveness: 8 },
@@ -24,7 +25,12 @@ const monthlyMoodData = [
   { week: "4주차", happy: 5, neutral: 1, sad: 1, anxious: 0 },
 ]
 
-export default function Statistics() {
+interface StatisticsProps {
+  selectedTab?: string;
+  onTabChange?: (tab: string) => void;
+}
+
+export default function Statistics({ selectedTab = 'weekly', onTabChange }: StatisticsProps) {
   const currentWeek = new Date().toLocaleDateString("ko-KR", {
     month: "long",
     day: "numeric",
@@ -42,10 +48,11 @@ export default function Statistics() {
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="weekly" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs value={selectedTab} onValueChange={onTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="weekly">주간 분석</TabsTrigger>
           <TabsTrigger value="monthly">월간 분석</TabsTrigger>
+          <TabsTrigger value="consultation">상담 준비</TabsTrigger>
         </TabsList>
 
         <TabsContent value="weekly" className="space-y-6">
@@ -311,6 +318,10 @@ export default function Statistics() {
           </Card>
 
           
+        </TabsContent>
+
+        <TabsContent value="consultation" className="space-y-6">
+          <ConsultationPrep />
         </TabsContent>
       </Tabs>
     </div>

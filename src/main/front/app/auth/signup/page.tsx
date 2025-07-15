@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Brain, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import SocialLoginButtons from "@/components/auth/social-login-buttons"
 import { register } from "@/lib/api"
+import Cookies from 'js-cookie'
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -56,12 +57,8 @@ export default function SignupPage() {
       if (response.data.accessToken) {
         // 기존 사용자 정보 삭제
         localStorage.removeItem('userInfo')
-        localStorage.setItem('authToken', response.data.accessToken)
-        
-        // 리프레시 토큰 저장
-        if (response.data.refreshToken) {
-          localStorage.setItem('refreshToken', response.data.refreshToken)
-        }
+        Cookies.set('authToken', response.data.accessToken)
+        if(response.data.refreshToken){Cookies.set('refreshToken', response.data.refreshToken)}
         
         // JWT에서 사용자 정보 추출
         const decodeJWT = (token: string) => {

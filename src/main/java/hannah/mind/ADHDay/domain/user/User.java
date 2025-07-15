@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -29,7 +28,8 @@ public class User {
     @Column(nullable = false)
     private String nickname;
 
-    private LocalDate birthDate;
+    @Column(nullable = false, unique = true)
+    private String email;
 
     private String bio;
 
@@ -40,10 +40,9 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Builder
-    public User(Account account, String nickname, LocalDate birthDate, String bio) {
+    public User(Account account, String nickname, String bio) {
         this.account = account;
         this.nickname = nickname;
-        this.birthDate = birthDate;
         this.bio = bio;
     }
 }

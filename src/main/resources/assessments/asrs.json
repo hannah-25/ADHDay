@@ -1,0 +1,223 @@
+{
+  "typeId": 1,
+  "typeName": "ASRS",
+  "description": "성인 ADHD 자가보고 척도",
+  "questions": [
+    {
+      "id": 1,
+      "orderNumber": 1,
+      "text": "과제를 마치는 데 어려움이 있나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 2,
+      "orderNumber": 2,
+      "text": "세부적인 사항에 대한 주의가 부족한가요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 3,
+      "orderNumber": 3,
+      "text": "집중하기 어렵거나 산만해지나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 4,
+      "orderNumber": 4,
+      "text": "지시에 따라 일을 끝내는 것이 어렵나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 5,
+      "orderNumber": 5,
+      "text": "체계적으로 일을 처리하는 데 어려움이 있나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 6,
+      "orderNumber": 6,
+      "text": "정해진 시간 안에 일을 마치기 어렵나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 7,
+      "orderNumber": 7,
+      "text": "자주 물건을 잃어버리나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 8,
+      "orderNumber": 8,
+      "text": "외부 자극에 쉽게 산만해지나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 9,
+      "orderNumber": 9,
+      "text": "지속적으로 앉아있기 어렵나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 10,
+      "orderNumber": 10,
+      "text": "조용히 하는 활동이 어렵나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 11,
+      "orderNumber": 11,
+      "text": "과도하게 말을 많이 하나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 12,
+      "orderNumber": 12,
+      "text": "질문이 끝나기 전에 대답하나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 13,
+      "orderNumber": 13,
+      "text": "다른 사람의 대화를 방해하나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 14,
+      "orderNumber": 14,
+      "text": "차례를 기다리는 것이 어렵나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 15,
+      "orderNumber": 15,
+      "text": "충동적으로 행동하나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 16,
+      "orderNumber": 16,
+      "text": "일이 계획대로 진행되지 않으면 화가 나나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 17,
+      "orderNumber": 17,
+      "text": "스트레스를 받을 때 감정 조절이 어렵나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    },
+    {
+      "id": 18,
+      "orderNumber": 18,
+      "text": "자주 충동적인 소비나 행동을 하나요?",
+      "options": [
+        { "value": 0, "label": "전혀 그렇지 않음" },
+        { "value": 1, "label": "가끔" },
+        { "value": 2, "label": "종종" },
+        { "value": 3, "label": "자주" },
+        { "value": 4, "label": "매우 자주" }
+      ]
+    }
+  ]
+}

@@ -1,11 +1,15 @@
 package hannah.mind.ADHDay.domain.account;
 
-import hannah.mind.ADHDay.auth.jwt.RefreshToken;
-import hannah.mind.ADHDay.auth.jwt.TokenProvider;
-import hannah.mind.ADHDay.auth.jwt.RefreshTokenService;
+import hannah.mind.ADHDay.auth.jwt.JwtTokenProvider;
+import hannah.mind.ADHDay.config.JwtProperties;
 import hannah.mind.ADHDay.domain.account.dto.AuthRequest;
 import hannah.mind.ADHDay.domain.account.dto.AuthResponse;
 import hannah.mind.ADHDay.domain.account.dto.LoginRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,18 +24,26 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Account API", description = "계정 관리 API (회원가입, 로그인, 로그아웃)")
 public class AccountApiController {
 
     private final AccountService accountService;
     private final AuthenticationManager authenticationManager;
-    private final TokenProvider tokenProvider;
-    private final RefreshTokenService refreshTokenService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProperties jwtProperties;
 
+    @Operation(summary = "회원가입", description = "새로운 사용자 계정을 생성합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "회원가입 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
+            @ApiResponse(responseCode = "409", description = "이미 존재하는 이메일")
+    })
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> signUp(@RequestBody @Valid AuthRequest request) {
+    public ResponseEntity<?> signUp(@RequestBody @Valid AuthRequest request) {
         try {
             Account account = accountService.registerAccount(request);
 
@@ -39,23 +51,26 @@ public class AccountApiController {
                     request.getEmail(),request.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = tokenProvider.generateAccessToken(account);
+            String accessToken = jwtTokenProvider.generateAccessToken(account);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(account);
 
-            String refreshToken = tokenProvider.generateRefreshToken(account);
-            refreshTokenService.saveRefreshToken(new RefreshToken(account.getId(), refreshToken));
-
-            return ResponseEntity.ok(new AuthResponse("ADHDay의 회원이 되신 걸 환영합니다",
-                    true, accessToken, refreshToken));
+            return ResponseEntity.ok(new AuthResponse("회원가입 성공!", true, accessToken, refreshToken));
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity
-                .badRequest()
-                .body(new AuthResponse(e.getMessage(), false, null, null));
+                    .badRequest()
+                    .body(e.getMessage());
         }
     }
 
+    @Operation(summary = "로그인", description = "사용자 로그인을 수행합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터")
+    })
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                             request.getEmail(),request.getPassword()));
@@ -63,27 +78,24 @@ public class AccountApiController {
 
             Account account = accountService.findByEmail(request.getEmail());
 
-            String accessToken = tokenProvider.generateAccessToken(account);
+            String accessToken = jwtTokenProvider.generateAccessToken(account);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(account);
 
-            String refreshToken = tokenProvider.generateRefreshToken(account);
-            refreshTokenService.saveRefreshToken(new RefreshToken(account.getId(), refreshToken));
-
-            return ResponseEntity.ok(new AuthResponse("로그인이 성공적으로 완료되었습니다.",
-                    true, accessToken, refreshToken));
+            return ResponseEntity.ok(new AuthResponse("로그인 성공!", true, accessToken, refreshToken));
 
         } catch (AuthenticationException e) {
             return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(new AuthResponse("로그인에 실패했습니다.", false, null,null));
+                .body("로그인 실패!");
         }
     }
 
-    // 로그아웃 엔드포인트는 제거 (JWT는 클라이언트에서 토큰을 삭제하면 됨)
+    @Operation(summary = "로그아웃", description = "사용자 로그아웃을 수행하고 토큰을 무효화합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "로그아웃 성공")
+    })
     @PostMapping("/logout")
     public ResponseEntity<String> logout(Authentication authentication) {
-        Long userId = ((Account)authentication.getPrincipal()).getId();
-        refreshTokenService.deleteRefreshToken(userId);
-
         return ResponseEntity.ok("로그아웃 성공!");
     }
 }
