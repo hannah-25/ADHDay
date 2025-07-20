@@ -36,6 +36,7 @@ public class JwtTokenProvider {
     public String generateAccessToken(Account account) {
         Date now = new Date();
         long expiryMs = now.getTime() + Duration.ofMinutes(jwtProperties.getAccessTokenExpirationMinutes()).toMillis();
+        System.out.println("expire" + expiryMs);
         return makeToken(account, new Date(expiryMs), true);
     }
 
@@ -56,10 +57,7 @@ public class JwtTokenProvider {
                 .setIssuer(jwtProperties.getIssuer())
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .setSubject(account.getEmail())
-
-                .claim("id", account.getId());
-
+                .setSubject(account.getEmail());
         if (isAccessToken) {
             // Access Token은 roles 포함!
 
@@ -79,26 +77,28 @@ public class JwtTokenProvider {
         try {
             Jwts.parser()
                     .setSigningKey(getSigningKey())
-                    .parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
+                    .parseClaimsJws(token); // 이 한 줄에서 만료까지 검증됨
+
+            return true; // 유효한 토큰
+        }
+        catch (Exception e) {
             return false;
         }
     }
 
     // Authentication (= UsernamePasswordAuthenticationToken) 발급!
     public Authentication getAuthentication(String token) {
-
         // token에서 claim만 가져오기!
         Claims claims = getClaims(token);
+        System.out.println("JWT 파싱 claims: " + claims);
 
-        // TO-BE
         Account account = accountRepository.findByEmail(claims.getSubject())
                 .orElseThrow(() -> new UsernameNotFoundException("토큰의 사용자가 더 이상 존재하지 않습니다")); // ✅
 
-        // UsernamePasswordAuthenticationToken(계정, 토큰, 권한(simpleGrantedAuthority) ) 발급!
+        System.out.println("Account from token: " + account.getEmail() + ", roles: " + account.getAuthorities());
+
         return new UsernamePasswordAuthenticationToken(
-                account,token, account.getAuthorities());
+                account, token, account.getAuthorities());
     }
 
     // 유저 ID 추출

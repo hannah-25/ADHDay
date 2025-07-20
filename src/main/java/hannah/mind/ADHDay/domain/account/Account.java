@@ -38,9 +38,6 @@ public class Account implements UserDetails {
     private Set<AccountType> accountTypes = new HashSet<>();
 
 
-    @Enumerated(EnumType.STRING)
-    private AccountStatus status;
-
     @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
     private User user;
 
@@ -49,7 +46,6 @@ public class Account implements UserDetails {
         this.email = email;
         this.password = password;
         this.accountTypes = Collections.singleton(AccountType.ROLE_USER);
-        this.status = AccountStatus.ACTIVE;
     }
 
 

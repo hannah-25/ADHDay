@@ -16,7 +16,7 @@ import java.io.IOException;
 
 
 // `OncePerRequestFilter`를 상속받아 요청당 한 번만 실행되도록 보장
-@Configuration
+//@Configuration
 @RequiredArgsConstructor
 public class JwtCookieAuthFilter extends OncePerRequestFilter {
 
@@ -36,8 +36,7 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
         }
 
 
-        // 기존: 헤더에서 꺼냄
-        // 바꾼 버전: 쿠키에서 꺼냄
+        // 쿠키에서 토큰 꺼냄
         String accessToken = getTokenFromCookie(request, "access_token");
 
         // 가져온 토큰이 유효한지 확인하고, 유효한 때는 인증 정보 설정

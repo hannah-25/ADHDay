@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
+import { logout } from "@/lib/api"
 
 interface LogoutButtonProps {
   variant?: "default" | "outline" | "ghost"
@@ -11,18 +12,19 @@ interface LogoutButtonProps {
 
 export default function LogoutButton({ variant = "outline", size = "default", className }: LogoutButtonProps) {
   const handleLogout = async () => {
-    // 로그아웃 로직 구현
-    console.log("Logout initiated")
+    try {
+      // 서버에 로그아웃 요청
+      await logout()
+    } catch (error) {
+      console.error('로그아웃 API 호출 실패:', error)
+    } finally {
+      // 로컬 스토리지 클리어
+      localStorage.removeItem("accessToken")
+      localStorage.removeItem("refreshToken")
 
-    // 로컬 스토리지 클리어
-    localStorage.removeItem("user")
-    localStorage.removeItem("token")
-
-    // 쿠키 클리어 (실제 구현 시)
-    // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-
-    // 로그인 페이지로 리다이렉트
-    window.location.href = "/auth/login"
+      // 로그인 페이지로 리다이렉트
+      window.location.href = "/auth/login"
+    }
   }
 
   return (

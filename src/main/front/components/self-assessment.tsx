@@ -3,12 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Brain, FileText, Target, AlertTriangle, Heart } from "lucide-react"
 import { getAssessmentTemplate, submitAssessmentAnswers } from "@/lib/api"
 import { AssessmentTemplate, AssessmentAnswer } from "@/types/assessment"
 import { useEffect } from "react"
@@ -103,7 +98,12 @@ export default function SelfAssessment() {
       for (const t of TEMPLATES) {
         const typeId = t.typeId
         const typeAnswers = answers[typeId] || []
-        await submitAssessmentAnswers(typeId, typeAnswers)
+        console.log('제출 typeId:', typeId, 'answers:', typeAnswers)
+        try {
+          await submitAssessmentAnswers(typeId, typeAnswers)
+        } catch (e) {
+          console.error(`설문 제출 실패 (typeId: ${typeId})`, e)
+        }
       }
       alert("자가진단 결과가 제출되었습니다!")
       window.location.href = "/"

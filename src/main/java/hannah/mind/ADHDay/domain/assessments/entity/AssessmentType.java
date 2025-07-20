@@ -1,8 +1,10 @@
 package hannah.mind.ADHDay.domain.assessments.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public enum AssessmentType {
 
     ASRS(1, "ASRS"),
@@ -11,11 +13,6 @@ public enum AssessmentType {
 
     private final Integer id;
     private final String displayName;
-
-    AssessmentType(Integer id, String displayName) {
-        this.id = id;
-        this.displayName = displayName;
-    }
 
     public static AssessmentType fromId(Integer id) {
         for (AssessmentType type : values()) {

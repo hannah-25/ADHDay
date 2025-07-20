@@ -1,5 +1,5 @@
 export interface AssessmentOption {
-  value: number;
+  score: number;
   label: string;
 }
 
@@ -18,7 +18,7 @@ export interface AssessmentTemplate {
 
 export interface AssessmentAnswer {
   questionId: number;
-  value: number;
+  score: number;
 }
 
 export interface AssessmentSubmitRequest {

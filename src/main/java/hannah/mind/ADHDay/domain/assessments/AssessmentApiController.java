@@ -71,9 +71,14 @@ public class AssessmentApiController {
             @RequestBody AssessmentResultRequest request,
             Authentication authentication
     ) {
+        System.out.println("Assessment 제출 - Authentication: " + authentication);
+        if (authentication != null) {
+            System.out.println("Principal: " + authentication.getPrincipal());
+            System.out.println("Authorities: " + authentication.getAuthorities());
+        }
+        System.out.println("AssessmentResultRequest typeId: " + request.getTypeId() + ", answers: " + request.getAnswers());
         String email = authentication.getName();
-
-//        userAssessmentService.saveAssessment(email, request.getAnswers().getId(), request);
+        userAssessmentService.saveAssessment(email, request.getTypeId(), request.getAnswers());
         return ResponseEntity.ok("저장 완료");
     }
 

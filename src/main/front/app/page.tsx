@@ -6,11 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Calendar, TrendingUp, FileText, User, LogOut, LogIn, UserPlus, Info } from "lucide-react"
+import {  TrendingUp,  User, LogOut, LogIn, UserPlus, Info } from "lucide-react"
 import Dashboard from "@/components/dashboard"
 import Statistics from "@/components/statistics"
-import { logout, getUserInfo } from "@/lib/api"
-import Cookies from 'js-cookie'
+import { logout } from "@/lib/api"
 
 export default function ADHDayApp() {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -23,21 +22,38 @@ export default function ADHDayApp() {
   })
   const router = useRouter()
 
+  // JWT 디코딩 함수
+  function decodeJWT(token: string) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  }
+
   // 컴포넌트 마운트 시 로그인 상태 확인 및 사용자 정보 가져오기
   useEffect(() => {
-    const init=async()=>{
-      try{
-        const res=await getUserInfo();
-        if(res.data.user){
-          setUserProfile({name:res.data.user.name,email:res.data.user.email,avatar:res.data.user.avatar||"/placeholder-user.jpg"});
-          setIsLoggedIn(true);
-        }
-      }catch(e){
-        setIsLoggedIn(false);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (token) {
+      const user = decodeJWT(token);
+      if (user && (user.sub || user.email)) {
+        setUserProfile({
+          name: user.name || (user.sub ? user.sub.split('@')[0] : (user.email ? user.email.split('@')[0] : '사용자')),
+          email: user.sub || user.email || '',
+          avatar: "/placeholder-user.jpg"
+        });
+        setIsLoggedIn(true);
+        return;
       }
-    };
-    init();
-  },[]);
+    }
+    setIsLoggedIn(false);
+    setUserProfile({ name: "", email: "", avatar: "/placeholder-user.jpg" });
+  }, []);
 
   const handleLogin = () => {
     router.push("/auth/login")
@@ -50,18 +66,16 @@ export default function ADHDayApp() {
   const handleLogout = async () => {
     try {
       await logout()
-      Cookies.remove('authToken')
-      Cookies.remove('refreshToken')
-      localStorage.removeItem('userInfo')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
       setIsLoggedIn(false)
       setUserProfile({ name: "", email: "", avatar: "/placeholder-user.jpg" })
       alert('로그아웃되었습니다.')
     } catch (error) {
       console.error('로그아웃 실패:', error)
       // 로컬에서 토큰과 사용자 정보 제거하고 로그아웃 처리
-      Cookies.remove('authToken')
-      Cookies.remove('refreshToken')
-      localStorage.removeItem('userInfo')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
       setIsLoggedIn(false)
       setUserProfile({ name: "", email: "", avatar: "/placeholder-user.jpg" })
       alert('로그아웃되었습니다.')

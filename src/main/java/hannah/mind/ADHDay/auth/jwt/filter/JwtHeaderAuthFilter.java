@@ -1,6 +1,7 @@
 package hannah.mind.ADHDay.auth.jwt.filter;
 
 import hannah.mind.ADHDay.auth.jwt.JwtTokenProvider;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,13 +33,16 @@ public class JwtHeaderAuthFilter extends OncePerRequestFilter {
 
         // Authorization 헤더에서 토큰 추출
         String accessToken = getTokenFromHeader(request);
+        System.out.println("Authorization 헤더: " + accessToken);
 
         // 가져온 토큰이 유효한지 확인하고, 유효한 때는 인증 정보 설정
         if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
             Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
+            System.out.println("인증된 Authentication: " + authentication);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+        } else {
+            System.out.println("토큰이 없거나 유효하지 않음");
         }
-
         filterChain.doFilter(request, response);
     }
 

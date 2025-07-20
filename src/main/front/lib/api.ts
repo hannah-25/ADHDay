@@ -1,13 +1,45 @@
 import axios from 'axios';
-import Cookies from 'js-cookie'
 
 // API 기본 URL - 외부 백엔드 서버 사용
 const API_BASE_URL = 'http://localhost:8080/api';
 
+// 토큰 관리 함수들
+const getToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('accessToken');
+  }
+  return null;
+};
+
+const setToken = (token: string) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('accessToken', token);
+  }
+};
+
+const removeToken = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+  }
+};
+
+const getRefreshToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('refreshToken');
+  }
+  return null;
+};
+
+const setRefreshToken = (token: string) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('refreshToken', token);
+  }
+};
+
 // Axios 설정
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,26 +47,25 @@ const apiClient = axios.create({
 
 // 로그인 API
 export const login = (email: string, password: string) => {
-  return apiClient.post('/auth/login', { email, password }, { withCredentials: true });
+  return apiClient.post('/auth/login', { email, password });
 };
 
 // 회원가입 API
 export const register = (email: string, password: string) => {
   // 여러 가능한 엔드포인트 시도
-  return apiClient.post('/auth/signup', { email, password }, { withCredentials: true });
+  return apiClient.post('/auth/signup', { email, password });
 };
 
 // 토큰 갱신 API
 export const refreshToken = () => {
-  const refreshToken = Cookies.get('refreshToken');
-  return apiClient.post('/auth/refresh', { refreshToken }, { withCredentials: true });
+  const refreshToken = getRefreshToken();
+  return apiClient.post('/auth/refresh', { refreshToken });
 };
 
 // 로그아웃 API
 export const logout = () => {
-  const token = Cookies.get('authToken');
+  const token = getToken();
   return apiClient.post('/auth/logout', {}, {
-    withCredentials: true,
     headers: {
       'Authorization': `Bearer ${token}`
     }
@@ -56,20 +87,6 @@ const decodeJWT = (token: string) => {
   }
 };
 
-// 사용자 정보 가져오기 API
-export const getUserInfo = () => {
-  const token = Cookies.get('access_token');
-  if (token) {
-    const decoded = decodeJWT(token);
-    if (decoded) {
-      const userInfo={id:decoded.id,email:decoded.sub||decoded.email,name:decoded.name||((decoded.sub||'').split('@')[0])}
-      return Promise.resolve({data:{user:userInfo}})
-    }
-  }
-  // fallback to server request; credentials included so cookie will be sent
-  return apiClient.get('/auth/me', { withCredentials: true });
-};
-
 // 설문 템플릿 받아오기
 export const getAssessmentTemplate = (typeId: number) => {
   return apiClient.get(`/assessments/templates/${typeId}`);
@@ -80,15 +97,20 @@ export const submitAssessmentAnswers = (
   typeId: number,
   answers: { questionId: number, value: number }[]
 ) => {
-  return apiClient.post(`/assessments/${typeId}/answers`, {
+  return apiClient.post(`/assessments/results`, {
+    typeId, // typeId를 body에 포함
     answers
   });
 };
 
-
-// 요청 인터셉터 - 요청 로깅
+// 요청 인터셉터 - 모든 요청에 토큰 추가
 apiClient.interceptors.request.use(
   (config) => {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
     console.log('API 요청:', {
       method: config.method,
       url: config.url,
@@ -125,7 +147,7 @@ apiClient.interceptors.response.use(
 
     // 401 에러이고 토큰 갱신이 가능한 경우
     if (error.response?.status === 401 && !error.config._retry) {
-      const refreshToken = Cookies.get('refreshToken');
+      const refreshToken = getRefreshToken();
       
       if (refreshToken) {
         error.config._retry = true;
@@ -136,8 +158,10 @@ apiClient.interceptors.response.use(
           });
           
           if (response.data.accessToken) {
-            Cookies.set('authToken', response.data.accessToken);
-            if (response.data.refreshToken) { Cookies.set('refreshToken', response.data.refreshToken); }
+            setToken(response.data.accessToken);
+            if (response.data.refreshToken) { 
+              setRefreshToken(response.data.refreshToken); 
+            }
             
             // 원래 요청 재시도
             error.config.headers['Authorization'] = `Bearer ${response.data.accessToken}`;
@@ -146,10 +170,10 @@ apiClient.interceptors.response.use(
         } catch (refreshError) {
           console.error('토큰 갱신 실패:', refreshError);
           // 토큰 갱신 실패 시 로그아웃 처리
-          Cookies.remove('authToken');
-          Cookies.remove('refreshToken');
-          Cookies.remove('userInfo');
-          window.location.href = '/auth/login';
+          removeToken();
+          if (typeof window !== 'undefined') {
+            window.location.href = '/auth/login';
+          }
         }
       }
     }

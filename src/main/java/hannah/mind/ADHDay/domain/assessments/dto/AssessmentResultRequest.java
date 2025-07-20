@@ -6,13 +6,13 @@ import lombok.Getter;
 import java.util.List;
 
 @Data
-@Getter
 public class AssessmentResultRequest {
     private List<Answer> answers;
+    private Integer typeId;
 
-    @Data
+    @Getter
     public static class Answer {
         private Integer questionId;
-        private Integer score;
+        private Integer value;
     }
 }

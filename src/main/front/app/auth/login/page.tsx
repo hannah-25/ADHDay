@@ -12,8 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Brain, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import SocialLoginButtons from "@/components/auth/social-login-buttons"
-import { login, register } from "@/lib/api"
-import Cookies from 'js-cookie'
+import { login } from "@/lib/api"
 
 export default function LoginPage() {
   // 폼 상태 관리
@@ -33,65 +32,13 @@ export default function LoginPage() {
       console.log('로그인 성공:', response.data)
       console.log('응답 전체 구조:', response)
       
-      if (response.data.token) {
-        // 기존 사용자 정보 삭제
-        localStorage.removeItem('userInfo')
-        Cookies.set('authToken', response.data.token)
-        console.log('토큰 저장됨:', response.data.token)
+      if (response.data.accessToken) {
+        localStorage.setItem('accessToken', response.data.accessToken)
+        console.log('토큰 저장됨:', response.data.accessToken)
       }
       
-      if (response.data.refreshToken) { Cookies.set('refreshToken', response.data.refreshToken) }
-      
-      // JWT 토큰에서 사용자 정보 추출
-      const decodeJWT = (token: string) => {
-        try {
-          const base64Url = token.split('.')[1];
-          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-          }).join(''));
-          return JSON.parse(jsonPayload);
-        } catch (error) {
-          console.error('JWT 디코드 실패:', error);
-          return null;
-        }
-      };
-
-      // 사용자 정보 저장 - JWT에서 추출
-      let userInfo = null
-      if (response.data.user) {
-        userInfo = response.data.user
-      } else if (response.data.data && response.data.data.user) {
-        userInfo = response.data.data.user
-      } else if (response.data) {
-        // 응답 자체가 사용자 정보인 경우
-        userInfo = response.data
-      }
-      
-      // JWT에서 사용자 정보 추출 시도
-      if (response.data.token) {
-        const decoded = decodeJWT(response.data.token)
-        console.log('JWT 디코드 결과:', decoded)
-        if (decoded) {
-          userInfo = {
-            id: decoded.id,
-            email: decoded.sub || decoded.email,
-            name: decoded.name || (decoded.sub ? decoded.sub.split('@')[0] : '사용자')
-          }
-          console.log('JWT에서 추출한 사용자 정보:', userInfo)
-        }
-      }
-      
-      if (userInfo) {
-        const userData = {
-          name: userInfo.name || (userInfo.email ? userInfo.email.split('@')[0] : '사용자'),
-          email: userInfo.email || '',
-          avatar: userInfo.avatar || "/placeholder-user.jpg"
-        }
-        localStorage.setItem('userInfo', JSON.stringify(userData))
-        console.log('사용자 정보 저장됨:', userData)
-      } else {
-        console.log('사용자 정보를 찾을 수 없음. 응답 구조:', response.data)
+      if (response.data.refreshToken) { 
+        localStorage.setItem('refreshToken', response.data.refreshToken) 
       }
       
       alert('로그인에 성공했습니다!')
@@ -105,10 +52,7 @@ export default function LoginPage() {
     }
   }
 
-  // 회원가입 페이지로 이동하는 함수
-  const handleSignupRedirect = () => {
-    router.push('/auth/signup')
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -142,6 +86,7 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -158,6 +103,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10"
                     required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"

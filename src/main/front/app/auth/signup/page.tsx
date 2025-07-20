@@ -13,7 +13,6 @@ import { Separator } from "@/components/ui/separator"
 import { Brain, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import SocialLoginButtons from "@/components/auth/social-login-buttons"
 import { register } from "@/lib/api"
-import Cookies from 'js-cookie'
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -55,39 +54,10 @@ export default function SignupPage() {
       
       // 회원가입 성공 시 토큰 처리
       if (response.data.accessToken) {
-        // 기존 사용자 정보 삭제
-        localStorage.removeItem('userInfo')
-        Cookies.set('authToken', response.data.accessToken)
-        if(response.data.refreshToken){Cookies.set('refreshToken', response.data.refreshToken)}
-        
-        // JWT에서 사용자 정보 추출
-        const decodeJWT = (token: string) => {
-          try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-          } catch (error) {
-            console.error('JWT 디코드 실패:', error);
-            return null;
-          }
-        };
-
-        const decoded = decodeJWT(response.data.accessToken)
-        console.log('회원가입 JWT 디코드 결과:', decoded)
-        
-        if (decoded) {
-          const userData = {
-            name: decoded.name || (decoded.sub ? decoded.sub.split('@')[0] : '사용자'),
-            email: decoded.sub || decoded.email || formData.email,
-            avatar: "/placeholder-user.jpg"
-          }
-          localStorage.setItem('userInfo', JSON.stringify(userData))
-          console.log('회원가입 사용자 정보 저장됨:', userData)
+        localStorage.setItem('accessToken', response.data.accessToken)
+        if(response.data.refreshToken){
+          localStorage.setItem('refreshToken', response.data.refreshToken)
         }
-        
         alert('회원가입에 성공했습니다! 자동으로 로그인됩니다.')
         router.push('/')
       } else {
